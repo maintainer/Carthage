@@ -14,10 +14,10 @@ import ReactiveCocoa
 import ReactiveTask
 
 extension BuildOptions: OptionsType {
-	public static func create(configuration: String) -> BuildPlatform -> String? -> String? -> BuildOptions {
-		return { buildPlatform in { toolchain in { derivedDataPath in
-			return self.init(configuration: configuration, platforms: buildPlatform.platforms, toolchain: toolchain, derivedDataPath: derivedDataPath)
-		} } }
+	public static func create(configuration: String) -> BuildPlatform -> String? -> String? -> Bool -> BuildOptions {
+		return { buildPlatform in { toolchain in { derivedDataPath in { noClean in
+			return self.init(configuration: configuration, platforms: buildPlatform.platforms, toolchain: toolchain, derivedDataPath: derivedDataPath, noClean: noClean)
+			} } } }
 	}
 
 	public static func evaluate(m: CommandMode) -> Result<BuildOptions, CommandantError<CarthageError>> {
@@ -30,6 +30,7 @@ extension BuildOptions: OptionsType {
 			<*> m <| Option(key: "platform", defaultValue: .All, usage: "the platforms to build for (one of 'all', 'macOS', 'iOS', 'watchOS', 'tvOS', or comma-separated values of the formers except for 'all')" + addendum)
 			<*> m <| Option<String?>(key: "toolchain", defaultValue: nil, usage: "the toolchain to build with")
 			<*> m <| Option<String?>(key: "derived-data", defaultValue: nil, usage: "path to the custom derived data folder")
+			<*> m <| Switch(flag: nil, key: "no-clean", usage: "WARNING: experimental option! Rebuild without clean. (Use for projects without CoreData only)")
 	}
 }
 
@@ -223,6 +224,12 @@ public struct BuildCommand: CommandType {
 				}
 		}
 	}
+}
+
+
+public enum CleanBeforeBuild {
+	case Clean
+	case NoClean
 }
 
 /// Represents the user's chosen platform to build for.

@@ -865,7 +865,7 @@ public typealias SDKFilterCallback = (sdks: [SDK], scheme: String, configuration
 ///
 /// Returns a signal of all standard output from `xcodebuild`, and a signal
 /// which will send the URL to each product successfully built.
-public func buildScheme(scheme: String, withConfiguration configuration: String, inProject project: ProjectLocator, workingDirectoryURL: NSURL, derivedDataPath: String?, toolchain: String?, sdkFilter: SDKFilterCallback = { .Success($0.0) }) -> SignalProducer<TaskEvent<NSURL>, CarthageError> {
+public func buildScheme(scheme: String, withConfiguration configuration: String, inProject project: ProjectLocator, workingDirectoryURL: NSURL, derivedDataPath: String?, toolchain: String?, noClean: Bool, sdkFilter: SDKFilterCallback = { .Success($0.0) }) -> SignalProducer<TaskEvent<NSURL>, CarthageError> {
 	precondition(workingDirectoryURL.fileURL)
 
 	let buildArgs = BuildArguments(project: project, scheme: scheme, configuration: configuration, derivedDataPath: derivedDataPath, toolchain: toolchain)
@@ -939,7 +939,11 @@ public func buildScheme(scheme: String, withConfiguration configuration: String,
 							argsForBuilding.bitcodeGenerationMode = .Bitcode
 						}
 
-						var buildScheme = xcodebuildTask(["clean", "build"], argsForBuilding)
+						var buildTasks = ["build"]
+						if noClean == false {
+							buildTasks.insert("clean", atIndex: 0)
+						}
+						var buildScheme = xcodebuildTask(buildTasks, argsForBuilding)
 						buildScheme.workingDirectoryPath = workingDirectoryURL.path!
 
 						return launchTask(buildScheme)
@@ -1229,7 +1233,7 @@ public func buildInDirectory(directoryURL: NSURL, withOptions options: BuildOpti
 					return sdkFilter(sdks: filteredSDKs, scheme: scheme, configuration: configuration, project: project)
 				}
 
-				let buildProgress = buildScheme(scheme, withConfiguration: options.configuration, inProject: project, workingDirectoryURL: directoryURL, derivedDataPath: options.derivedDataPath, toolchain: options.toolchain, sdkFilter: wrappedSDKFilter)
+				let buildProgress = buildScheme(scheme, withConfiguration: options.configuration, inProject: project, workingDirectoryURL: directoryURL, derivedDataPath: options.derivedDataPath, toolchain: options.toolchain, noClean: options.noClean, sdkFilter: wrappedSDKFilter)
 					// Discard any existing Success values, since we want to
 					// use our initial value instead of waiting for
 					// completion.

@@ -16,11 +16,14 @@ public struct BuildOptions {
 	public let toolchain: String?
 	/// The path to the custom derived data folder.
 	public let derivedDataPath: String?
+	/// Skip clean step
+	public let noClean: Bool
 
-	public init(configuration: String, platforms: Set<Platform> = [], toolchain: String? = nil, derivedDataPath: String? = nil) {
+	public init(configuration: String, platforms: Set<Platform> = [], toolchain: String? = nil, derivedDataPath: String? = nil, noClean: Bool = false) {
 		self.configuration = configuration
 		self.platforms = platforms
 		self.toolchain = toolchain
 		self.derivedDataPath = derivedDataPath
+		self.noClean = noClean
 	}
 }
